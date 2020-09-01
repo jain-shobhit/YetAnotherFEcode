@@ -1,4 +1,6 @@
 # YetAnotherFEcode
+[![DOI](https://zenodo.org/badge/292112576.svg)](https://zenodo.org/badge/latestdoi/292112576)
+
 A simple MATLAB-based code for implementing the Finite Element method in an object oriented fashion.
 
 The main idea behind this package is to enable rapid prototyping and reproducible research related to finite element applications 
@@ -25,3 +27,8 @@ our invited collaborators for the time-being and open sharing is currently disco
 
 To use the code, simply add the main folder and its contents to the MATLAB path. Feel free to play with examples in the examples directory.
 Further usage and development instructions to follow.  
+
+To showcase the relevance, please cite the following reference if you use this package in your work
+Shobhit Jain, Jacopo Marconi, & Paolo Tiso. (2020). YetAnotherFEcode (Version v1.1). Zenodo. http://doi.org/10.5281/zenodo.4011282
+
+Please report any issues/bugs to Shobhit Jain <shjain@ethz.ch>
