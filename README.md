@@ -1,4 +1,4 @@
-# (yet another?) FEcode
+# YetAnotherFEcode
 A simple MATLAB-based code for implementing the Finite Element method in an object oriented fashion.
 
 The main idea behind this package is to enable rapid prototyping and reproducible research related to finite element applications 
