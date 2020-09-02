@@ -22,9 +22,6 @@ element-level implementation to quickly obtain results. At the same time, develo
 alternative ideas to improve this environment and potentially publish them, allowing future users to access and build upon their work. 
 This allows for rapid developement and testing of ideas, especially valuable in research efforts.
 
-The vision is to publicly host this respository upon reaching critical mass with the idea that one can directly use and understand the research performed on this platform without having to implement it from scratch. With this idea, we also aim to promote reproduciblile research in the scientific community. To reach this "critical mass", however, we privately host this repository with 
-our invited collaborators for the time-being and open sharing is currently discouraged.
-
 To use the code, simply add the main folder and its contents to the MATLAB path. Feel free to play with examples in the examples directory.
 Further usage and development instructions to follow.  
 
