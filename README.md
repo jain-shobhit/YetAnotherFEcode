@@ -26,6 +26,7 @@ To use the code, simply add the main folder and its contents to the MATLAB path.
 Further usage and development instructions to follow.  
 
 To showcase the relevance, please cite the following reference if you use this package in your work
-Shobhit Jain, Jacopo Marconi, & Paolo Tiso. (2020). YetAnotherFEcode. Zenodo. http://doi.org/10.5281/zenodo.4011281
+
+Shobhit Jain, Jacopo Marconi & Paolo Tiso (2020). YetAnotherFEcode. Zenodo. http://doi.org/10.5281/zenodo.4011281
 
 Please report any issues/bugs to Shobhit Jain <shjain@ethz.ch>
