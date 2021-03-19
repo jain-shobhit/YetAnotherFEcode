@@ -1,5 +1,5 @@
 # YetAnotherFEcode
-[![DOI](https://zenodo.org/badge/292112576.svg)](https://zenodo.org/badge/latestdoi/292112576)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4011281.svg)](https://doi.org/10.5281/zenodo.4011281)
 
 A simple MATLAB-based code for implementing the Finite Element method in an object oriented fashion.
 
