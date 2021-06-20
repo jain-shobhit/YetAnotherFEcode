@@ -234,7 +234,8 @@ classdef Tet10Element < Element
             index = get_index(self.nodeIDs,self.nDOFPerNode);
             
             % location of each dimension of tensor in global DOFs
-            globalSubs = {index, index, index};
+            globalSubs = cell(4,1);
+            globalSubs(:) = {index};
                         
             X = self.quadrature.X;
             W = self.quadrature.W;
