@@ -40,6 +40,9 @@ PlateAssembly = Assembly(myMesh);
 K = PlateAssembly.stiffness_matrix();
 M = PlateAssembly.mass_matrix();
 C = PlateAssembly.damping_matrix();
+PlateAssembly.DATA.K = K;
+PlateAssembly.DATA.M = M;
+PlateAssembly.DATA.C = C;
 
 % Tensor Assembly
 T2 = PlateAssembly.tensor('T2',[myMesh.nDOFs, myMesh.nDOFs, myMesh.nDOFs], [2,3]);
@@ -72,14 +75,16 @@ F = Pressure*PlateAssembly.uniform_body_force();
 u_lin = PlateAssembly.solve_system(K,F);
 ULIN = reshape(u_lin,6,[]);
 figure(2); PlotMesh(Nodes,Elements,0);
-hold on; PlotFieldonDeformedMesh(Nodes,Elements,ULIN(1:3,:).','factor',1)
+hold on; PlotFieldonDeformedMesh(Nodes,Elements,ULIN(1:3,:).','factor',1);
 
 % Nonlinear response
-u = static_equilibrium( PlateAssembly, u_lin, F );
+u = static_equilibrium( PlateAssembly, F );
 U = reshape(u,6,[]);
 hold on
-PlotFieldonDeformedMesh(Nodes,Elements,U(1:3,:).','factor',1, 'color', 'w' )
+PlotFieldonDeformedMesh(Nodes,Elements,U(1:3,:).','factor',1, 'color', 'w' );
 colormap gray
+
+drawnow
 
 %% Dynamic response using Implicit Newmark
 % forcing frequency of the average of first two natural frequencies

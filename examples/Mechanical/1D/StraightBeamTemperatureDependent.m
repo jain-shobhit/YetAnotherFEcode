@@ -72,7 +72,6 @@ myElementConstructor = @()ThermalBeamElement(b, h, myThermalBeamMaterial); % sam
 
 % Mesh
 ThermalBeamMesh = Mesh(Nodes);
-ThermalBeamMesh.nDOFPerNode = nDOFperNode;
 ThermalBeamMesh.create_elements_table(Elements,myElementConstructor);
 
 % Set dirichlet DOFs

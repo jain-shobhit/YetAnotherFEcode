@@ -1,19 +1,15 @@
-function [ u_lin, u ] = static_equilibrium( Assembly, uInit, Fext, varargin )
+function [ u_lin, u ] = static_equilibrium( Assembly, Fext, varargin )
 % finds the equilibrium configuration of the model subject to Fext load.
 %   Detailed explanation goes here
-
-% compute linear displacement
-u0 = zeros(Assembly.Mesh.nDOFs,1);
-[K,~] = Assembly.tangent_stiffness_and_force(u0);
+K = Assembly.DATA.K;
 u_lin = Assembly.solve_system(K,Fext);
+u0 = Assembly.constrain_vector(u_lin);
 
-% initial displacement
-u0 = Assembly.constrain_vector(uInit);
-
-[nsteps,tol,method,maxIter] = parse_inputs(varargin{:});
+[nsteps,tol,method,displayoption] = parse_inputs(varargin{:});
 switch method
     case 'fsolve'
-        options = optimoptions('fsolve','SpecifyObjectiveGradient',true,'MaxIterations',maxIter);
+        options = optimoptions('fsolve','SpecifyObjectiveGradient',true,...
+            'MaxIterations',10000,'Display',displayoption);
         [ueq] = fsolve(@(u)f(u,Assembly,Fext),u0,options);
         u = Assembly.unconstrain_vector(ueq);
         
@@ -32,15 +28,8 @@ switch method
                 c = norm(Assembly.constrain_vector(residual))/c0;
                 fprintf('STEP %d, ITERATION %d, RESIDUAL %d \n',j,it,c);
                 if c < tol
-                    disp('Iterations converged')
                     break
                 end
-                
-                if it>=maxIter
-                    disp('Not converged: maximum number of iterations reached')
-                    break
-                end
-                
                 correction = Assembly.solve_system(K,residual);
                 u = u + correction;
                 it = it + 1;
@@ -60,25 +49,26 @@ F = Assembly.constrain_vector(Fint - Fext);
 end
 
 
-function [nsteps,tol,method,maxIter] = parse_inputs(varargin)
+function [nsteps,tol,method,displayoption] = parse_inputs(varargin)
 %% parsing inputs
 defaultnsteps = 100;
 defaulttol = 1e-6;
 defaultmethod = 'fsolve';
-defaultmaxiter = 100;
+defaultdisplay = 'final';
+
 p = inputParser;
 addParameter(p,'nsteps',defaultnsteps, @(x)validateattributes(x, ...
-    {'numeric'},{'nonempty','integer','positive'}) );
-addParameter(p,'maxIter',defaultmaxiter, @(x)validateattributes(x, ...
     {'numeric'},{'nonempty','integer','positive'}) );
 addParameter(p,'tol',defaulttol, @(x)validateattributes(x, ...
     {'numeric'},{'nonempty','positive'}) );
 addParameter(p,'method',defaultmethod,@(x)validateattributes(x, ...
+    {'char'},{'nonempty'}))
+addParameter(p,'display',defaultdisplay,@(x)validateattributes(x, ...
     {'char'},{'nonempty'}))
 parse(p,varargin{:});
 
 nsteps = p.Results.nsteps;
 tol = p.Results.tol;
 method = p.Results.method;
-maxIter = p.Results.maxIter;
+displayoption = p.Results.display;
 end

@@ -177,7 +177,7 @@ classdef Assembly < handle
             Elements = self.Mesh.Elements; % Elements array            
             
             % parsing element weights
-            [elementWeights,inputs] = obj.parse_inputs(varargin{:});
+            [elementWeights,inputs] = self.parse_inputs(varargin{:});
             
             % extracting elements with nonzero weights
             elementSet = find(elementWeights);
