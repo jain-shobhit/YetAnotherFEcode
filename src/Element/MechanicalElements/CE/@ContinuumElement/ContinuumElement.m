@@ -184,7 +184,7 @@ classdef ContinuumElement < Element
                 % functions to integrate over volume
                 int_K1 = Bnl'*C*Bnl;
                 HSH = dH'*S*dH;
-                int_Ks = kron(eye(self.nDim), HSH);
+                int_Ks = kron(HSH, eye(self.nDim));
                 int_K = (int_K1 + int_Ks)*detJ;
                 int_F = (Bnl'*s)*detJ;
                 % integration of K and F through Gauss quadrature
