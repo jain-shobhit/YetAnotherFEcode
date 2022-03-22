@@ -2,6 +2,8 @@
 %
 % [nodes, elements, nset, elset, nset_name, elset_name] = mesh_ABAQUSread(filename,savemfile)
 %
+% *** DEPRECATED: use abqmesh instead.
+%
 % Description: read an ABAQUS .inp file to extract nodes and elements.
 % The function first reads the input file, then writes and execute a 
 % function (named "fun_abaqus2matlab_mesh.m") which produces the outputs.
@@ -28,6 +30,9 @@
 % Last modified: 12/AUG/2019
 
 function [nodes, elements, nset, elset, nset_name, elset_name] = mesh_ABAQUSread(filename,savemat)
+
+warning(['mesh_ABAQUSread is deprecated and will be removed in', ...
+    ' the following releases. Pleas, use "abqmesh" instead.'])
 
 tic
 fprintf(' Converting input file...')

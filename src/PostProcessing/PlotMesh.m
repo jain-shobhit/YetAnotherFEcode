@@ -20,14 +20,23 @@ if nargin == 2
     show = 0 ;
 end
 
-dimension = size(Nodes,2) ;  % Dimension of the mesh
-nel = size(Elements,1) ;                  % number of elements
-nnode = length(Nodes) ;          % total number of nodes in system
-nnel = size(Elements,2);                % number of nodes per element
+if iscell(Elements)
+    cELEMENTS = Elements;
+else
+    cELEMENTS{1} = Elements;
+end
+
+for ee = 1 : length(cELEMENTS)
+% cycle the PlotMesh function over all element types in the cell array
+Elements = cELEMENTS{ee};
+
+dimension = size(Nodes,2);  % Dimension of the mesh
+nel = size(Elements,1);     % number of elements
+nnode = length(Nodes);      % total number of nodes in system
+nnel = size(Elements,2);    % number of nodes per element
 
 if dimension == 3   % For 3D plots
     elementdim = rank(diff(Nodes(Elements(1,:),1:3)));
-    
     
     if elementdim == 3 % solid in 3D when we simply plot the skin elements
         faces = getSkin3D(Elements);
@@ -81,6 +90,7 @@ end
 rotate3d on;
 axis equal;
 axis off;
+end
 end
 
 function [X,Y,Z] = tune_coordinates(X,Y,Z)

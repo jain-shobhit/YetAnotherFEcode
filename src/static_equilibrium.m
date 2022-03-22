@@ -15,7 +15,7 @@ switch method
         
     case 'newton'
         u = u_lin/nsteps;
-        figure; xlabel('Normalized load');ylabel('$$\|\mathbf{u}\|$$')
+        figure; xlabel('Normalized load');ylabel('$$\|\mathbf{u}\|$$',Interpreter='latex')
         h = animatedline;
         addpoints(h,0,0);
         for j = 1:nsteps
