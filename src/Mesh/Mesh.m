@@ -58,13 +58,29 @@ classdef Mesh < handle
             % Elements(j).isBoundary = true if j-th Element is Boundary element, false otherwise
             
             narginchk(3,5)
+            %% check if there are multiple element types
+            multielem = 0;
+            if iscell(elementsConnectivity)
+                ntypes = length(elementsConnectivity);
+                if ntypes > 1
+                    multielem = 1;
+                end
+            else
+                ntypes = 1;
+                econn{1} = elementsConnectivity;
+                econstr{1} = elementConstructor;
+                elementsConnectivity = econn;
+                elementConstructor = econstr;
+            end
             %% check element compatibility with the mesh
-            test = elementConstructor();
-            if self.nDOFPerNode==0 % default value,                
-                self.nDOFPerNode = test.nDOFPerNode;
-            else    % check nDOFPerNode compatibility between elementConstructor and the Mesh
-                if ~isequal(self.nDOFPerNode, test.nDOFPerNode)
-                    error('nDOFPerNode error: The supplied element must have the same number of DOFs per node (nDOFPerNode) as the Mesh')
+            for ee = 1 : ntypes
+                test = elementConstructor{ee}();
+                if self.nDOFPerNode==0 % default value,                
+                    self.nDOFPerNode = test.nDOFPerNode;
+                else    % check nDOFPerNode compatibility between elementConstructor and the Mesh
+                    if ~isequal(self.nDOFPerNode, test.nDOFPerNode)
+                        error('nDOFPerNode error: The supplied element must have the same number of DOFs per node (nDOFPerNode) as the Mesh')
+                    end
                 end
             end
             %% parse inputs
@@ -76,20 +92,21 @@ classdef Mesh < handle
             isBoundary = p.Results.isBoundary;
             
             %% Add the supplied elements to given list
-            nElements = size(elementsConnectivity,1); %#ok<*PROPLC>
-            if ~isempty(elementsConnectivity)
-                % initialize elements as a table
-                thisElementsTable = struct('Object', cell(nElements,1), 'isBoundary', isBoundary);
-                % node IDs for each element
-                for j = 1:nElements
-                    nodeIDs = elementsConnectivity(j,:);
-                    thisElementsTable(j).Object = elementConstructor();
-                    thisElementsTable(j).Object.nodeIDs = nodeIDs;
-                    thisElementsTable(j).Object.nodes = self.nodes(nodeIDs,:);
+            for ee = 1 : ntypes
+                nElements = size(elementsConnectivity{ee},1); %#ok<*PROPLC>
+                if ~isempty(elementsConnectivity{ee})
+                    % initialize elements as a table
+                    thisElementsTable = struct('Object', cell(nElements,1), 'isBoundary', isBoundary);
+                    % node IDs for each element
+                    for j = 1 : nElements
+                        nodeIDs = elementsConnectivity{ee}(j,:);
+                        thisElementsTable(j).Object = elementConstructor{ee}();
+                        thisElementsTable(j).Object.nodeIDs = nodeIDs;
+                        thisElementsTable(j).Object.nodes = self.nodes(nodeIDs,:);
+                    end
+                    % add new elements to exisiting  (possibly empty) set of elements
+                    self.Elements = [self.Elements; thisElementsTable];
                 end
-                
-                % add new elements to exisiting  (possibly empty) set of elements
-                self.Elements = [self.Elements; thisElementsTable];
             end
         end
         

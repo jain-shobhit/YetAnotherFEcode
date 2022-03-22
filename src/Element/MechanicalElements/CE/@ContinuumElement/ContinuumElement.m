@@ -209,10 +209,10 @@ classdef ContinuumElement < Element
             % might not be the best way, but still...]
             %______________________________________________________________
             if self.nDim == 2
-                F = sparse(16,1);
+                F = sparse(self.nelDOFs,1);
                 F(2:2:end) = self.area/self.nNodes; % uniformly distributed pressure on the structure
             elseif self.nDim == 3
-                F = sparse(60,1);
+                F = sparse(self.nelDOFs,1);
                 F(3:3:end) = self.vol/self.nNodes; % uniformly distributed pressure on the structure
             end
         end

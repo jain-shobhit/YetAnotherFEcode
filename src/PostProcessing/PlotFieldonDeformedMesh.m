@@ -28,7 +28,18 @@ function h = PlotFieldonDeformedMesh(Nodes,Elements,disp,varargin)
 
 
 %%
-[meshcolor,factor,c] = parse_inputs(varargin{:});
+[meshcolor,factor,col] = parse_inputs(varargin{:});
+
+
+if iscell(Elements)
+    cELEMENTS = Elements;
+else
+    cELEMENTS{1} = Elements;
+end
+
+for ee = 1 : length(cELEMENTS)
+% cycle the PlotMesh function over all element types in the cell array
+Elements = cELEMENTS{ee};
 
 nnodes = size(Nodes,1);      % number of nodes
 dimension = size(Nodes,2) ;  % Dimension of the mesh
@@ -38,7 +49,7 @@ nel = size(Elements,1);      % total number of elements
 nnel = size(Elements,2);     % number of nodes per element
 
 
-if isempty(c)
+if isempty(col)
     c = zeros(nnodes,1);
 end
 
@@ -56,9 +67,8 @@ if dimension == 3   % For 3D plots
         nel = size(Elements,1);      % total number of faces
         nnel = size(Elements,2);     % number of nodes per face
     end
-        
-        
-    switch c
+
+    switch col
         case 'U'
             c = d;
         case 'U1'
@@ -98,7 +108,7 @@ elseif dimension == 2           % For 2D plots
     ux = disp(:,1) ;
     uy = disp(:,2) ;
     d = sqrt(ux.^2 + uy.^2);
-    switch c
+    switch col
             case 'U'
                 c = d;
             case 'U1'
@@ -135,6 +145,7 @@ end
         SetColorbar
     end
 
+end
 end
 
 function [meshcolor,factor,c] = parse_inputs(varargin)
