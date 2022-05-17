@@ -63,6 +63,22 @@ u0 = zeros( myMesh.nDOFs, 1);
 BeamAssembly.DATA.K = K;
 BeamAssembly.DATA.M = M;
 
+%% Tensor
+
+nDOFs = BeamAssembly.Mesh.nDOFs;
+u0 = randi(5,nDOFs,1);
+F2 = BeamAssembly.vector('F2',u0,u0);
+T2 = BeamAssembly.tensor('T2',[nDOFs, nDOFs, nDOFs], [2,3]);
+F2check = ttv(T2,{u0,u0},[2,3]);
+norm(F2check.data - F2)/norm(F2)
+
+F3 = BeamAssembly.vector('F3',u0,u0,u0);
+T3 = BeamAssembly.tensor('T3',[nDOFs, nDOFs, nDOFs, nDOFs], [2,3,4]);
+F3check = ttv(T3,{u0,u0,u0},[2,3,4]);
+norm(F3check.data - F3)/norm(F3)
+
+[~,F] = BeamAssembly.tangent_stiffness_and_force(u0);
+norm(K*u0 + F2 + F3 - F)/norm(F)
 
 %% EXAMPLE 1                                                        
 

@@ -44,10 +44,25 @@ PlateAssembly.DATA.K = K;
 PlateAssembly.DATA.M = M;
 PlateAssembly.DATA.C = C;
 
-% Tensor Assembly
-T2 = PlateAssembly.tensor('T2',[myMesh.nDOFs, myMesh.nDOFs, myMesh.nDOFs], [2,3]);
-T3 = PlateAssembly.tensor('T3',[myMesh.nDOFs, myMesh.nDOFs, myMesh.nDOFs, myMesh.nDOFs], [2,3,4]);
+%% Tensor Assembly
 
+nDOFs = PlateAssembly.Mesh.nDOFs;
+u0 = randi(5,nDOFs,1);
+F2 = PlateAssembly.vector('F2',u0,u0);
+T2 = PlateAssembly.tensor('T2',[nDOFs, nDOFs, nDOFs], [2,3]);
+F2check = ttv(T2,{u0,u0},[2,3]);
+norm(F2check.data - F2)/norm(F2)
+
+F3 = PlateAssembly.vector('F3',u0,u0,u0);
+T3 = PlateAssembly.tensor('T3',[nDOFs, nDOFs, nDOFs, nDOFs], [2,3,4]);
+F3check = ttv(T3,{u0,u0,u0},[2,3,4]);
+F3check = sparse(F3check.subs,ones(length(F3check.subs),1),F3check.vals,nDOFs,1);
+norm(F3check - F3)/norm(F3)
+
+[~,F] = PlateAssembly.tangent_stiffness_and_force(u0);
+norm(K*u0 + F2 + F3 - F)/norm(F)
+
+%%
 myMesh.set_essential_boundary_condition([bnodes{1}, bnodes{2}],1:3,0) % simply supported on two opposite edges
 % myMesh.set_essential_boundary_condition([bnodes{1}],1:6,0) % cantilever on one edge
 
