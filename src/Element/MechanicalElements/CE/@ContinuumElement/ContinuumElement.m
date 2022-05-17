@@ -270,6 +270,33 @@ classdef ContinuumElement < Element
             T2 = Q3h./2 + Q3ht;
         end
         
+        function f2 = F2(self,x,y)
+            % this function computes the quadratic component of the
+            % nonlinear internal force in global coordinates at the element
+            % level.
+            x_e = self.extract_element_data(x);
+            y_e = self.extract_element_data(y);           
+            
+            T2e = self.T2();
+            f2 = ttv(T2e,{x_e,y_e},[2,3]);
+            f2 = f2.data;                
+        end
+
+        function Df2 = DF2(self,x,y)
+            % this function computes the Jacobian of the quadratic component 
+            % of the nonlinear internal force in global coordinates 
+            % at the element level. The Jacobian is evaluated along the
+            % direction (x) and acted on the vector y. Hence, the output is a vector.  
+            
+            x_e = self.extract_element_data(x);
+            y_e = self.extract_element_data(y);            
+            
+            T2e = self.T2();
+            T2e = T2e + permute(T2e,[1 3 2]);
+            Df2 = ttv(T2e,{x_e,y_e},[2 3]);
+            Df2 = Df2.data;
+        end
+        
         function [T3, globalSubs] = T3(self, varargin)
             % this function computes the 4-tensor corresponding to the 
             % quadratic component of the nonlinear internal force in 
@@ -318,6 +345,35 @@ classdef ContinuumElement < Element
            
         end
         
+        function f3 = F3(self,x,y,z)
+            % this function computes the cubic component of the
+            % nonlinear internal force in global coordinates at the element
+            % level along the direction (x,y,z). 
+            x_e = self.extract_element_data(x);
+            y_e = self.extract_element_data(y);           
+            z_e = self.extract_element_data(z);
+            
+            T3e = self.T3();
+            f3 = ttv(T3e,{x_e,y_e,z_e},[2,3,4]);
+            f3 = f3.data;                
+        end
+        
+        function Df3 = DF3(self,x,y,z)
+            % this function computes the Jacobian of the cubic component of the
+            % nonlinear internal force in global coordinates at the element
+            % level. The Jacobian is evaluated along the direction (x,y) 
+            % and acted on the vector z. Hence, the output is a vector.  
+            x_e = self.extract_element_data(x);
+            y_e = self.extract_element_data(y);
+            z_e = self.extract_element_data(z);
+           
+            T3e = self.T3();
+            T3e = T3e + permute(T3e,[1 3 4 2]) + permute(T3e,[1 3 2 4]);
+            Df3 = ttv(T3e, {x_e, y_e, z_e}, [2 3 4]);
+            Df3 = Df3.data;
+        end
+        
+         
         % ANCILLARY FUNCTIONS _____________________________________________
         
         function V = get.vol(self)
