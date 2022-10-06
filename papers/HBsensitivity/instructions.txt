@@ -1,0 +1,31 @@
+
+INSTRUCTIONS FOR SENSITIVITY OF HB.
+Content:
+(1) folder ’HB-sensitivity-functions’ contains functions that are used for sensitivity analysis of HB equations.
+(2) folder ‘for-DpROM' contains functions that are useful for sensitivity analysis of HB applied to DpROM
+(3) folder ‘example1’ contains an example in which sensitivity analysis of HB is applied to a two dof nonlinear oscillator.
+(4) folder ‘example2’ contains an example in which sensitivity analysis of HB is applied to DpROM
+
+To run examples it is required to have installed:
+(1) ‘NlVib’ (version 2020) (Malte Krack, Johann Gross)
+(2) ‘matlab tensor toolbox’
+
+only for example2:
+(1) YetAnotherFecode with DpROM branch (Shobhit Jain- Marconi Jacopo)
+
+
+EXAMPLE1
+content:
+HB sensitivity analysis of a two dof mass damper system. First mass (dof1) is connected to the ground, second mass (dof2) is connected only to the first mass. Connection is made with nonlinear cubic spring (f = k1*q + k3*q^3).
+Some viscous damping is introduced.
+Sensitivity of HB coefficients is made with respect to values of the stiffness coefficients of the two springs.
+How to run it?:
+add folder ’HB sensitivity functions’,’ matlab tensor toolbox’ and ’NlVib’ to matlab path. Run ‘main_oscillator.m’.
+
+EXAMPLE2
+content:
+HB sensitivity to defect amplitudes of a fe beam modelled with a DpROM.
+How to run it?
+add folder ’HB sensitivity functions’, folder ‘for DpROM sensitivity’, ‘matlab tensor toolbox’, ’NlVib’,’YetAnotherFecode-DpROM’ to matlab path.
+Run ‘main_beam.m’. To avoid running all sensitivity analysis set variable SENS = 0 (line 43). 
+
