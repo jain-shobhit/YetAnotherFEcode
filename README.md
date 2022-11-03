@@ -29,4 +29,4 @@ To showcase the relevance, please cite the following reference if you use this p
 
 Shobhit Jain, Jacopo Marconi & Paolo Tiso (2020). YetAnotherFEcode. Zenodo. http://doi.org/10.5281/zenodo.4011281
 
-Please report any issues/bugs to Shobhit Jain <shjain@ethz.ch>
+Please report any issues/bugs to Shobhit Jain <shobhit.jain@tudelft.nl> or Jacopo Marconi <jacopo.marconi@polimi.it>
