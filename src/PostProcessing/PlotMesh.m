@@ -53,7 +53,7 @@ if dimension == 3   % For 3D plots
         [X,Y,Z] = tune_coordinates(X,Y,Z);
     end
     
-    p = patch(X,Y,Z,'w','FaceAlpha',1.0,'EdgeAlpha',1,...
+    p{ee} = patch(X,Y,Z,'w','FaceAlpha',1.0,'EdgeAlpha',1,...
         'EdgeColor','k','LineStyle','-','DisplayName','Mesh');
     view(3)
     
@@ -63,9 +63,9 @@ elseif dimension == 2           % For 2D plots
     if elementdim == 2
         X = Nodes(Elements',1); X = reshape(X, nnel, nel);
         Y = Nodes(Elements',2); Y = reshape(Y, nnel, nel);
-        p = patch(X,Y,'w','DisplayName','Mesh');
+        p{ee} = patch(X,Y,'w','DisplayName','Mesh');
     else % line
-        p=plot(Nodes(:,1),Nodes(:,2),'.-k', 'Markersize',10);
+        p{ee}=plot(Nodes(:,1),Nodes(:,2),'.-k', 'Markersize',10);
     end
     
 end
@@ -83,13 +83,17 @@ if show ~= 0
             text(X(:,i),Y(:,i),Z(:,i),int2str(nd(Elements(i,:))),'fontsize',8,'color','k');
             text(mean(X(:,i)),mean(Y(:,i)),mean(Z(:,i)),int2str(i),'fontsize',10,'color','r') ;
         end
-        p.FaceAlpha = 0.2;
+        p{ee}.FaceAlpha = 0.2;
     end
 end
 % set(gca,'XTick',[]) ; set(gca,'YTick',[]); set(gca,'ZTick',[]);
 rotate3d on;
 axis equal;
 axis off;
+end
+
+if length(p)==1
+    p = p{1};
 end
 end
 
