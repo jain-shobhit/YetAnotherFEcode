@@ -56,17 +56,19 @@ elseif strcmpi(method,'HB')
         Omega = Om(ww);
         t = 2*pi/Omega;
         % add harmonics
-        Q0  = Q(I0, ww);
-        Qre = Q(IC, ww);
-        Qim = Q(IS, ww);
+        Q0 = Q(I0, ww);
+        Qc = Q(IC, ww);
+        Qs = Q(IS, ww);
         
         % EXPONENTIAL representation
-%         C = (Qre - 1i*Qim).*exp(1i*kk*Omega*t); % watch out for the minus sign!
+%         Qre = +Qc;
+%         Qim = -Qs;
+%         C = (Qre + 1i*Qim).*exp(1i*kk*Omega*t);
 %         q(:,ww) = real(sum(reshape([Q0; C], n, H+1), 2));
 %         u(:,ww) = real(sum(reshape((1i*kk*Omega).*C, n, H), 2)) / Omega;        
         % SINE-COSINE representation
-        CC = Qre.*cos(kk*Omega*t) + Qim.*sin(kk*Omega*t);
-        CS =-Qre.*sin(kk*Omega*t) + Qim.*cos(kk*Omega*t);
+        CC = Qc.*cos(kk*Omega*t) + Qs.*sin(kk*Omega*t);
+        CS =-Qc.*sin(kk*Omega*t) + Qs.*cos(kk*Omega*t);
         q(:,ww) = real(sum(reshape([Q0; CC], n, H+1), 2));
         u(:,ww) = real(sum(reshape((kk*Omega).*CS, n, H),2)) / Omega; % /Omega is the normalization used in X_shoot
     end
