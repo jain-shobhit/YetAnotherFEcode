@@ -100,7 +100,7 @@ if dimension == 3   % For 3D plots
     defoZ = Z+factor*UZ ;
     
     view(3); hold on;
-    h = patch(defoX,defoY,defoZ,profile,'EdgeColor',meshcolor,...
+    h{ee} = patch(defoX,defoY,defoZ,profile,'EdgeColor',meshcolor,...
         'DisplayName','Deformed Mesh');
     rotate3d on;
 
@@ -130,10 +130,10 @@ elseif dimension == 2           % For 2D plots
         defoX = X + factor*UX ;
         defoY = Y + factor*UY ;
         
-        h{1} = patch(defoX,defoY,profile,'EdgeColor',meshcolor);
-        h{2} = plot(defoX(:),defoY(:),'.','Color', meshcolor, 'Markersize',10);
+        h{ee}{1} = patch(defoX,defoY,profile,'EdgeColor',meshcolor);
+        h{ee}{2} = plot(defoX(:),defoY(:),'.','Color', meshcolor, 'Markersize',10);
     else
-        h = plot(Nodes(:,1)+factor*ux,Nodes(:,2)+factor*uy,'.-','Color', meshcolor, 'Markersize',10);
+        h{ee} = plot(Nodes(:,1)+factor*ux,Nodes(:,2)+factor*uy,'.-','Color', meshcolor, 'Markersize',10);
         c = [];
     end
     
@@ -145,6 +145,9 @@ end
         SetColorbar
     end
 
+end
+if length(h)==1
+    h = h{1};
 end
 end
 
