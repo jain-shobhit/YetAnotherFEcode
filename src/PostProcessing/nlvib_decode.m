@@ -73,8 +73,8 @@ switch method
         Qre = zeros(n, nw, H);
         Qim = zeros(n, nw, H);
         for h = 1 : H
-            Qre(:, :, h) = Q((2*h-1)*n+1 : 2*h*n, :);
-            Qim(:, :, h) = Q((2*h)*n+1 : (2*h+1)*n, :);
+            Qre(:, :, h) = +Q((2*h-1)*n+1 : 2*h*n, :);
+            Qim(:, :, h) = -Q((2*h)*n+1 : (2*h+1)*n, :);
         end
         
         % store results in a struct

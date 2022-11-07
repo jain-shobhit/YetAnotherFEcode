@@ -15,7 +15,11 @@
 % Created: 21 March 2022
 % Last modified: 22 March 2022
 
-function meshinfo = abqmesh(filename)
+function meshinfo = abqmesh(filename, saveinfo)
+
+if nargin < 2
+    saveinfo=0;
+end
 
 if ~strcmp(filename(end-3:end),'.inp')
     filename = [filename '.inp'];
@@ -39,21 +43,23 @@ for ii = 1 : length(b)
     elem{ii}   = b{ii}{2};
 
     lines = splitlines(elem{ii});
+    c = cell(length(lines),1);
     for jj = 1 : length(lines)
         c{jj,:} = str2num(lines{jj});
     end
     
-    C = [];
     % check first two lines (elements with many nodes go on two lines)
     if length(c{1}) ~= length(c{2})
         % if different, concatenate lines by pairs:
         jj = 1;
+        C = zeros(length(c)/2,length(c{1})+length(c{2})); 
         for kk = 1 : length(c)/2
             C(kk,:) = [c{jj} c{jj+1}];
             jj = jj+2;
         end
     else
         % otherwise, convert to matrix:
+        C = zeros(length(c),length(c{1}));
         for kk = 1 : length(c)
             C(kk,:) = c{kk};
         end
@@ -76,6 +82,10 @@ for ii = 1 : length(b)
     end
 end
 meshinfo.nset = nset;
+
+if saveinfo == 1
+    save(filename(1:end-4), 'meshinfo', '-v7.3')
+end
 
 fclose(fid);
 end
