@@ -112,6 +112,23 @@ classdef Tet4Element < ContinuumElement
                 0 0 1];
         end
         
+        function edges = edge_nodes
+            edges = [1 2; 2 3; 3 1; 1 4; 4 2; 4 3];
+        end
+
+        function [faces, normal_vectors] = face_nodes
+            % face nodes are ordered ccw according to the right hand rule,
+            % with the thumb oriented as the outward normal to the face
+            faces = {[1 2 4;
+                2 3 4;
+                3 1 4;
+                1 3 2]};
+            normal_vectors = [0 -1 0;
+                sqrt(3)/3 sqrt(3)/3 sqrt(3)/3;
+                -1 0 0;
+                0 0 -1];
+        end
+        
     end
 
         
