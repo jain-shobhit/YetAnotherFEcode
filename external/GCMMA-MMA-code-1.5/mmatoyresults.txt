@@ -1,0 +1,41 @@
+Copyright (C) 2009 Krister Svanberg
+This file, mmatoyresults.txt, is part of GCMMA-MMA-code.
+Redistribution is allowed under the terms of the GNU General Public License.
+
+>mmatoyinit
+>mmatoymain
+
+outvector1 =     0     4     3     2
+outvector2 =    29    -6    -6
+
+outvector1 =    1.0000    2.3903    1.8057    0.9929
+outvector2 =    9.9599   -2.1517    0.2152
+
+>maxoutit=4;
+>mmatoymain
+
+outvector1 =    2.0000    2.0385    1.7624    1.2417
+outvector2 =    8.8030   -0.1143    0.0232
+
+outvector1 =    3.0000    2.0178    1.7786    1.2392
+outvector2 =    8.7703   -0.0002    0.0000
+
+outvector1 =    4.0000    2.0176    1.7794    1.2383
+outvector2 =    8.7702    0.0000   -0.0000
+
+outvector1 =    5.0000    2.0176    1.7798    1.2378
+outvector2 =    8.7702    0.0000   -0.0000
+
+>mmatoymain
+
+outvector1 =    6.0000    2.0175    1.7800    1.2376
+outvector2 =    8.7702   -0.0000   -0.0000
+
+outvector1 =    7.0000    2.0175    1.7800    1.2375
+outvector2 =    8.7702   -0.0000   -0.0000
+
+outvector1 =    8.0000    2.0175    1.7800    1.2375
+outvector2 =    8.7702   -0.0000   -0.0000
+
+outvector1 =    9.0000    2.0175    1.7800    1.2375
+outvector2 =    8.7702   -0.0000   -0.0000
