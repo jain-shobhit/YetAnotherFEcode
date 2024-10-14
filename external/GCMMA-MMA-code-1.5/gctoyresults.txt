@@ -1,0 +1,41 @@
+Copyright (C) 2009 Krister Svanberg
+This file, gctoyresults.txt, is part of GCMMA-MMA-code.
+Redistribution is allowed under the terms of the GNU General Public License.
+
+>gctoyinit
+>gctoymain
+
+outvector1 =     0     0     4     3     2
+outvector2 =    29    -6    -6
+
+outvector1 =    1.0000         0    2.5550    1.8906    1.0765
+outvector2 =   11.2616   -3.0043   -0.6529
+
+>maxoutit=4;
+>gctoymain
+
+outvector1 =    2.0000    1.0000    2.0722    1.7959    1.1910
+outvector2 =    8.9376   -0.3497   -0.0086
+
+outvector1 =    3.0000         0    2.0162    1.7914    1.2244
+outvector2 =    8.7730   -0.0030   -0.0011
+
+outvector1 =    4.0000    1.0000    2.0170    1.7835    1.2335
+outvector2 =    8.7704   -0.0000   -0.0001
+
+outvector1 =    5.0000    1.0000    2.0174    1.7807    1.2367
+outvector2 =    8.7703   -0.0000   -0.0000
+
+>gctoymain
+
+outvector1 =    6.0000    1.0000    2.0175    1.7801    1.2374
+outvector2 =    8.7702   -0.0000   -0.0000
+
+outvector1 =    7.0000         0    2.0175    1.7800    1.2375
+outvector2 =    8.7702   -0.0000   -0.0000
+
+outvector1 =    8.0000         0    2.0175    1.7800    1.2375
+outvector2 =    8.7702   -0.0000   -0.0000
+
+outvector1 =    9.0000         0    2.0175    1.7800    1.2375
+outvector2 =    8.7702   -0.0000   -0.0000

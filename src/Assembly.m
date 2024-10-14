@@ -277,6 +277,167 @@ classdef Assembly < handle
 
         end
 
+        
+        function [K] = matrix_uniform(self, elementMethodName, varargin)
+            % This function assembles a generic finite element matrix from
+            % its element level counterpart.
+            % All elements are assumed to be the same.
+            % elementMethodName is a string input containing the name of
+            % the method that returns the element level matrix Ke.
+            % For this to work, a method named elementMethodName which
+            % returns the appropriate matrix must be defined for all
+            % element types in the FE Mesh.
+
+            n_e = self.Mesh.nElements;
+
+            I = cell(n_e,1); % row indices
+            J = cell(n_e,1); % column indices
+            K = cell(n_e,1); % values
+            Elements = self.Mesh.Elements;
+            
+            % parsing element weights
+            [elementWeights,inputs] = self.parse_inputs(varargin{:});
+            
+            % extracting elements with nonzero weights
+            elementSet = find(elementWeights);
+
+            % compute the matrix of the first element
+            Ke = Elements(1).Object.(elementMethodName)(inputs{:});
+            Ke = Ke(:);
+            
+            % Computing element level contributions            
+            parfor j = elementSet
+                thisElement = Elements(j).Object;
+                
+                index = thisElement.iDOFs;
+                d = length(index);
+                I{j} = kron(true(d,1), index);
+                J{j} = kron(index, true(d,1));
+
+                K{j} = elementWeights(j) * Ke;
+            end
+
+            I = vertcat(I{:});
+            J = vertcat(J{:});
+            K = vertcat(K{:});
+
+            K = sparse(I, J, K, self.Mesh.nDOFs, self.Mesh.nDOFs);
+        end
+
+        % function [F] = vector_uniform(self, elementMethodName, varargin)
+        % end
+
+        % function [S] = scalar_uniform(self, elementMethodName, varargin)
+        % end
+
+        function [K, f] = matrix_and_vector_uniform(self, elementMethodName, varargin)
+            % This function assembles a generic finite element matrix and 
+            % vector from its element level counterpart.
+            % All elements are assumed to be the same.
+            % elementMethodName is a string input containing the name of
+            % the method that returns the element level matrix Ke.
+            % For this to work, a method named elementMethodName which
+            % returns the appropriate matrix must be defined for all
+            % element types in the FE Mesh.
+            n_e = self.Mesh.nElements;
+            
+            index = cell(n_e,1);
+            I = cell(n_e,1); % row indices
+            J = cell(n_e,1); % column indices
+            K = cell(n_e,1); % values
+            f = cell(n_e,1); % values
+            Elements = self.Mesh.Elements;
+            
+            % parsing element weights
+            [elementWeights,inputs] = self.parse_inputs(varargin{:});
+            
+            % extracting elements with nonzero weights
+            elementSet = find(elementWeights);
+
+            % compute the matrix and vector of the first element
+            [Ke, fe] = Elements(1).Object.(elementMethodName)(inputs{:});
+            Ke = Ke(:);
+            
+            % Computing element level contributions
+            parfor j = elementSet
+                thisElement = Elements(j).Object;
+                
+                index{j} = thisElement.iDOFs;
+                d = length(index{j});
+                I{j} = kron(true(d,1), index{j});
+                J{j} = kron(index{j}, true(d,1));
+                
+                K{j} = elementWeights(j) * Ke;
+                f{j} = elementWeights(j) * fe;
+            end
+            
+            index = vertcat(index{:});
+            I = vertcat(I{:});
+            J = vertcat(J{:});
+            K = vertcat(K{:});
+            f = vertcat(f{:});
+            
+            K = sparse(I, J, K, self.Mesh.nDOFs, self.Mesh.nDOFs);
+            f = sparse(index, ones(length(index),1), f, self.Mesh.nDOFs, 1);
+        end
+
+        function [T] = tensor_uniform(self, elementMethodName, SIZE, sumDIMS, varargin)
+            % This function assembles a generic finite element vector from
+            % its element level counterpart.
+            % All elements are assumed to be the same.
+            % elementMethodName is a string input containing the name of
+            % the method that returns the element level vector Fe.
+            % For this to work, a method named elementMethodName which
+            % returns the appropriate vector must be defined for all
+            % element types in the FE Mesh.
+
+            n_e = self.Mesh.nElements;
+
+            subs = cell(n_e,1);
+            T = cell(n_e,1); % values
+            
+            Elements = self.Mesh.Elements;
+            
+            % parsing element weights
+            [elementWeights,inputs] = self.parse_inputs(varargin{:});
+            
+            % extracting elements with nonzero weights
+            elementSet = find(elementWeights);
+
+            % compute the tensor of the first element
+            [Te, ~] = Elements(1).Object.(elementMethodName)(inputs{:});
+            
+            % Computing element level contributions
+            parfor j = elementSet
+                thisElement = Elements(j).Object;
+                
+                % [Te, globalSUBS] = thisElement.(elementMethodName)(inputs{:});
+                % global DOFs associated to the element nodes
+                index = get_index(thisElement.nodeIDs, thisElement.nDOFPerNode);
+                
+                % location of each dimension of tensor in global DOFs
+                globalSubs = cell(length(SIZE), 1);
+                globalSubs(:) = {index};
+
+                [subs{j}, T{j}] = sparsify(elementWeights(j) * Te, globalSubs, sumDIMS);
+            end
+
+            subs = vertcat(subs{:});
+            if ~isempty(sumDIMS)
+                subs(:,sumDIMS) = sort(subs(:,sumDIMS),2);
+            end
+            T = vertcat(T{:});
+            T = sptensor(subs, T, SIZE);
+        end
+        
+        function M = mass_matrix_uniform(self, varargin)
+            M = self.matrix_uniform('mass_matrix',varargin{:});
+        end
+
+        function [K, f] = tangent_stiffness_and_force_uniform(self, varargin)
+            [K, f] = self.matrix_and_vector_uniform('tangent_stiffness_and_force',varargin{:});
+        end
+
 
         function Kc = constrain_matrix(self,K)
             if ~isempty(self.Mesh.EBC)

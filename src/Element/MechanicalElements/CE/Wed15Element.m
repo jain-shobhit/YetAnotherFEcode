@@ -165,6 +165,25 @@ classdef Wed15Element < ContinuumElement
                 0   1   0]; % node 15
         end
         
+        function edges = edge_nodes
+            edges = [1 7; 7 2; 2 8; 8 3; 3 9; 9 1; 1 13; 13 4; 2 14; ...
+                14 5; 3 15; 15 6; 4 10; 10 5; 5 11; 11 6; 6 12; 12 4];
+        end
+
+        function [faces, normal_vectors] = face_nodes
+            % face nodes are ordered ccw according to the right hand rule,
+            % with the thumb oriented as the outward normal to the face
+            faces = {[1 7 2 14 5 10 4 13;
+                2 8 3 15 6 11 5 14;
+                1 13 4 12 6 15 3 9], ...
+                [1 9 3 8 2 7;
+                4 10 5 11 6 12]};
+            normal_vectors = [0 -1 0;
+                sqrt(2)/2 sqrt(2)/2 0;
+                -1 0 0;
+                0 0 -1;
+                0 0 1];
+        end
     end
         
 end % classdef

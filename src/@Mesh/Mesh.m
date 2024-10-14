@@ -12,6 +12,9 @@ classdef Mesh < handle
                                 % when element belongs to a natural
                                 % boundary  and false when it belongs to
                                 % the domain of the Mesh.
+        elementsConnectivity    % Elements connectivity
+        DATA                    % Miscellaneous data structure with 
+                                % arbitrary, user-defined fields
     end
     
     methods
@@ -44,10 +47,32 @@ classdef Mesh < handle
             dofs = self.Elements(j).iDOFs;
         end
         
-        function [outdofFull] = get_DOF_from_location(self,outcoord)
-            dist = vecnorm(self.nodes - repmat(outcoord,[self.nNodes,1]),2,2);
-            [~,outnode] = min(dist);            
-            outdofFull = (outnode-1)*self.nDOFPerNode + (1:self.nDOFPerNode);
+        function DOFs = get_DOF_from_nodeIDs(self,nodeIDs)
+            nodeIDs = reshape(nodeIDs,[],1);
+            DOFs = (nodeIDs-1)*self.nDOFPerNode + (1:self.nDOFPerNode);
+        end
+
+        function DOFs = get_DOF_from_location(self,outcoord)
+            DOFs = zeros(size(outcoord,1), self.nDOFPerNode);
+            for ii = 1 : size(outcoord,1)
+                dist = vecnorm(self.nodes - repmat(outcoord(ii,:),[self.nNodes,1]),2,2);
+                [~,outnode] = min(dist);            
+                DOFs(ii,:) = (outnode-1)*self.nDOFPerNode + (1:self.nDOFPerNode);
+            end
+        end
+
+        function nodeIDs = get_nodeIDs_from_location(self,outcoord)
+            nodeIDs = zeros(size(outcoord,1), 1);
+            for ii = 1 : size(outcoord,1)
+                dist = vecnorm(self.nodes - repmat(outcoord(ii,:),[self.nNodes,1]),2,2);
+                [~,ind] = min(dist);            
+                nodeIDs(ii,1) = ind;
+            end
+        end
+
+        function coordinates = get_location_from_nodeIDs(self,nodeIDs)
+            nodeIDs = nodeIDs(:);
+            coordinates = self.nodes(nodeIDs,:);
         end
         
         function create_elements_table(self, elementsConnectivity,elementConstructor,varargin)
@@ -58,6 +83,8 @@ classdef Mesh < handle
             % Elements(j).isBoundary = true if j-th Element is Boundary element, false otherwise
             
             narginchk(3,5)
+
+            self.elementsConnectivity = elementsConnectivity;
             %% check if there are multiple element types
             multielem = 0;
             if iscell(elementsConnectivity)

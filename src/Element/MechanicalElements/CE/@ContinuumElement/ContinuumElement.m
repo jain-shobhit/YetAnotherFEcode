@@ -131,6 +131,11 @@ classdef ContinuumElement < Element
                     self.quadrature.Ng = Ngauss;
                     self.quadrature.X = x;	% gauss integration points
                     self.quadrature.W = w;	% gauss integration weights
+                case {'TRI'}
+                    p = quadtriangle(Ngauss, 'Domain', [0 0; 1 0; 0 1]);
+                    self.quadrature.Ng = Ngauss;
+                    self.quadrature.X = p.Points';	% gauss integration points
+                    self.quadrature.W = p.Weights;	% gauss integration weights
                 otherwise
                     error([' No quadrature rule found for the element "' ...
                         ELTYPE '". Accepted values are: HEX/QUAD, TET/TRI, WED'])
@@ -433,6 +438,103 @@ classdef ContinuumElement < Element
                 L(1,7,7)=1; L(4,8,7)=1; L(5,9,7)=1; 
                 L(4,7,8)=1; L(2,8,8)=1; L(6,9,8)=1; 
                 L(5,7,9)=1; L(6,8,9)=1; L(3,9,9)=1;
+            end
+        end
+
+        function spy_element(self)
+            X = self.natural_coordinates;
+            x = X(:,1); y = X(:, 2);
+            if self.nDim==3
+                z = X(:, 3);
+            else
+                z = x*0;
+            end
+            
+            figure
+            plot3(x,y,z,'ko','markersize',18,'markerfacecolor','k')
+            for ii = 1:length(x)
+                text(x(ii),y(ii),z(ii),num2str(ii),...
+                    'HorizontalAlignment','Center',...
+                    'FontWeight','bold','color','w','fontsize',14)
+            end            
+            axis equal; grid on
+            title([self.elType num2str(self.nNodes)])   
+            rotate3d on
+            
+            % plot edges (and normal vector to edges, if in 2D)
+            try
+                if self.nDim==2
+                    [edges,N] = self.edge_nodes;
+                else
+                    edges = self.edge_nodes;
+                end
+                
+                hold on
+                for ii = 1 : size(edges,1)
+                    xi = x(edges(ii,:));
+                    yi = y(edges(ii,:));
+                    zi = z(edges(ii,:)) - (self.nDim==2)*0.01;
+                    plot3(xi,yi,zi,'b','LineWidth',2)
+                    
+                    % plot edge tag
+                    xg = mean(xi); yg = mean(yi); zg = mean(zi);
+                    text(xg,yg,zg,num2str(ii),'color','k','fontsize',8)
+                    
+                    % plot normal to edges (2d only)
+                    if self.nDim==2
+                        n = N(ii,:)/3;
+                        quiver(xg+n(1)*0.2,yg+n(2)*0.2,n(1),n(2),0,'r',...
+                            'LineWidth',2,'MaxHeadSize',10);
+                    end
+                end
+            catch
+                warning('no "edge_nodes" found for this element')
+            end
+            
+            % plot faces (and normal vector to faces, if in 3D)
+            try
+                if self.nDim==3
+                    [faces,N] = self.face_nodes;
+                else
+                    faces = self.face_nodes;
+                end
+                hold on
+                kk = 1;
+                for jj = 1:length(faces)
+                    for ii = 1 : size(faces{jj},1)
+                        xi = x(faces{jj}(ii,:));
+                        yi = y(faces{jj}(ii,:));
+                        zi = z(faces{jj}(ii,:));
+                        patch(xi,yi,zi,'c','facealpha',0.2)
+
+                        % plot face tags
+                        xg = mean(xi); yg = mean(yi); zg = mean(zi);
+                        text(xg,yg,zg,num2str(kk),...
+                            'HorizontalAlignment','Center',...
+                            'FontWeight','bold','color','k',...
+                            'fontsize',14,'BackgroundColor','y')
+                        
+                        % plot normal to faces (3d only)
+                        if self.nDim==3
+                            n = N(kk,:)/3;
+                            quiver3(xg+n(1)*0.2,yg+n(2)*0.2,zg+n(3)*0.3,...
+                                n(1),n(2),n(3),0,'r',...
+                                'LineWidth',2,'MaxHeadSize',10);
+                        end
+
+                        kk = kk + 1;
+                    end
+                end
+            catch
+                warning('no "face_nodes" method found for this element')
+            end
+
+            if self.nDim==3
+                camproj perspective
+                xlabel('x'); ylabel('y'); zlabel('z')
+            else
+                view(2)
+                xlabel('x'); ylabel('y');
             end
         end
         

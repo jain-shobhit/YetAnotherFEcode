@@ -96,10 +96,10 @@ if strcmpi(analysis, 'NMA')
     s.delta = del;
     s.a = a;
 end
-s.harmonics.Qabs.displ   = Qabs(n+1:end, :, :);
-s.harmonics.Qabs.vel     = Qabs(1:n, :, :);
-s.harmonics.Qphase.displ = Qphase(n+1:end, :, :);
-s.harmonics.Qphase.vel   = Qphase(1:n, :, :);
+s.harmonics.Qabs.vel   = Qabs(n+1:end, :, :);
+s.harmonics.Qabs.displ     = Qabs(1:n, :, :);
+s.harmonics.Qphase.vel = Qphase(n+1:end, :, :);
+s.harmonics.Qphase.displ   = Qphase(1:n, :, :);
 s.harmonics.rms.displ = RMS(n+1:end, :);
 s.harmonics.rms.vel   = RMS(1:n, :);
 s.harmonics.max.displ = MAX(n+1:end, :);

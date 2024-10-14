@@ -278,7 +278,8 @@ for nl=1:length(nonlinear_elements)
             
         case 'custom'
             % myAssembly = nonlinear_elements{nl}.assembly;
-            [dfnl_dq, fnl] = fnl_CUSTOM( q );
+            fnl_CUSTOM = nonlinear_elements{nl}.custom_function;
+            [dfnl_dq, fnl] = fnl_CUSTOM( q );            
             
         otherwise
             error(['Unknown nonlinear element ' ...

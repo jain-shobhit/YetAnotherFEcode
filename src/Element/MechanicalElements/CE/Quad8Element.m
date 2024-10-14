@@ -97,6 +97,17 @@ classdef Quad8Element < ContinuumElement
                 -1  0]; % node 8
         end
         
+        function [edges,normal_vectors] = edge_nodes
+            edges = [1 5; 5 2; 2 6; 6 3; 3 7; 7 4; 4 8; 8 1]; % counterclockwise
+            normal_vectors = [0 -1; 0 -1; 1 0; 1 0; 0 1; 0 1; -1 0; -1 0];
+        end
+
+        function faces = face_nodes
+            % face nodes are ordered ccw according to the right hand rule,
+            % with the thumb oriented as the outward normal to the face
+            faces = {[1 5 2 6 3 7 4 8]};
+        end
+
     end
         
 end % classdef

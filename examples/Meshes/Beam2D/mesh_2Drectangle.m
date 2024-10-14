@@ -4,8 +4,8 @@
 % [nodes, elements, nset] = ...
 %           mesh_2Drectangle(Lx,Ly,nx,ny)
 %
-% Description: create the mesh for a rectangle using quadratic
-%              quadrilaterals (Quad8).
+% Description: create the mesh for a rectangle using quadrilaterals (Quad4,
+%           Quad8) and triangles (Tri3, Tri6).
 %
 % INPUTS    Lx, Ly: length, width
 %           nx,ny: number of elements for Lx and Ly, respectively.
@@ -23,8 +23,19 @@ elementType = upper(elementType);
 fprintf([' Meshing %d elements (' elementType ') ... '], nel)
 tic
 
-switch elementType
+switch upper(elementType)
+    case 'TRI3'
+        elements_per_square = 2;
+        nNodes = 3;
+        elnodes = [0 0; 1 0; 0 1;
+            1 0; 1 1; 0 1];
+    case 'TRI6'
+        elements_per_square = 2;
+        nNodes = 6;
+        elnodes = [0 0; 1 0; 0 1; .5 0; .5 .5; 0 .5;
+            1 0; 1 1; 0 1; 1 .5; .5 1; .5 .5];
     case 'QUAD4'
+        elements_per_square = 1;
         nNodes = 4;
         elnodes = [         % element coordinates in the natural space (/2)
          0     0
@@ -32,6 +43,7 @@ switch elementType
          1     1
          0     1];
     case 'QUAD8'
+        elements_per_square = 1;
         nNodes = 8;
         elnodes = [         % element coordinates in the natural space (/2)
              0     0
@@ -43,6 +55,7 @@ switch elementType
              0.5   1
              0     0.5];
 end
+nel = nel * elements_per_square;
 lx = Lx/nx;
 ly = Ly/ny;
 elnodes(:,1) = elnodes(:,1)*lx; % element coordinates in physical space
@@ -51,12 +64,15 @@ elnodes(:,2) = elnodes(:,2)*ly;
 nodes = zeros(nel*nNodes,2);
 nn = 1;
 for ii = 1:nx
-    for jj = 1:ny   
-        elnodes_temp = elnodes;
-        elnodes_temp(:,1) = elnodes_temp(:,1)+lx*(ii-1);
-        elnodes_temp(:,2) = elnodes_temp(:,2)+ly*(jj-1);
-        nodes(nn:nn+nNodes-1,:)  = elnodes_temp;
-        nn = nn+nNodes;
+    for jj = 1:ny
+        for kk = 1 : elements_per_square
+            ind = ((kk-1)*nNodes+1) : kk*nNodes;
+            elnodes_temp = elnodes(ind,:);
+            elnodes_temp(:,1) = elnodes_temp(:,1)+lx*(ii-1);
+            elnodes_temp(:,2) = elnodes_temp(:,2)+ly*(jj-1);
+            nodes(nn:nn+nNodes-1,:)  = elnodes_temp;
+            nn = nn+nNodes;
+        end
     end
 end
 

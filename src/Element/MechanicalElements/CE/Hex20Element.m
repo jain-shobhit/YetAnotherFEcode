@@ -135,6 +135,28 @@ classdef Hex20Element < ContinuumElement
                 -1 +1  0];
         end
         
+        function edges = edge_nodes
+            edges = [1 9; 9 2; 2 10; 10 3; 3 11; 11 4; 4 12; 12 1; ...
+                5 13; 13 6; 6 14; 14 7; 7 15; 15 8; 8 16; 16 5; 1 17; ...
+                17 5; 2 18; 18 6; 3 19; 19 7; 4 20; 20 8];
+        end
+
+        function [faces, normal_vectors] = face_nodes
+            % face nodes are ordered ccw according to the right hand rule,
+            % with the thumb oriented as the outward normal to the face
+            faces = {[1 9 2 18 6 13 5 17;
+                2 10 3 19 7 14 6 18;
+                3 11 4 20 8 15 7 19;
+                1 17 5 16 8 20 4 12;
+                5 13 6 14 7 15 8 16;
+                1 12 4 11 3 10 2 9]};
+            normal_vectors = [0 -1 0;
+                1 0 0;
+                0 1 0;
+                -1 0 0;
+                0 0 1;
+                0 0 -1];
+        end
     end
     
 end % classdef
