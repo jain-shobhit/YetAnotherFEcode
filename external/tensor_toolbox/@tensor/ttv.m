@@ -71,13 +71,18 @@ for i = 1:numel(dims)
     end
 end
 
-if exist('tensor/ttv_single','file') == 3
-    c = a;
-    for i = numel(dims) : -1 : 1
-        c = ttv_single(c,v{vidx(i)},dims(i));
-    end
-    return;
-end
+% % These lines are removed in yaFEc (they are outdated and never called,
+% % but the file search takes time). 
+% % See issue: https://gitlab.com/tensors/tensor_toolbox/-/issues/81
+% % NB: as a consequence, as long as this issue is not fixed, we comment
+% % out the tensor_toolbox from the .gitmodule file.
+% if exist('tensor/ttv_single','file') == 3
+%     c = a;
+%     for i = numel(dims) : -1 : 1
+%         c = ttv_single(c,v{vidx(i)},dims(i));
+%     end
+%     return;
+% end
 
 % Extract the MDA
 c = a.data;
