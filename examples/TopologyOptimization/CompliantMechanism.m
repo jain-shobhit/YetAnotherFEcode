@@ -2,30 +2,41 @@ clear; clc; close all;
 
 %% Problem settings
 % Material
-thickness = 1;
-DielMat = DielectricMaterial();
-DielMat.set('RELATIVE_PERMITTIVITY', 1);
-myElementConstructor = @() Quad4Element_EM(thickness, DielMat);
+E = 70e9; % Young's modulus [Pa]
+rho = 2700; % density [kg/m^3]
+nu = 0.33; % Poisson's ratio 
+thickness = 0.1; % [m] beam's out-of-plane thickness
+myMaterial = KirchoffMaterial();
+set(myMaterial,'YOUNGS_MODULUS',E,'DENSITY',rho,'POISSONS_RATIO',nu);
+myMaterial.PLANE_STRESS = true;	% set "false" for plane_strain
+myElementConstructor = @()Quad4Element(thickness, myMaterial);
 
 % Mesh
-lx = 1; ly = 1;
-nelx = 100; nely = 100;
+lx = 1; ly = 0.5;
+nelx = 100; nely = 50;
 [nodes, elements, nset] = mesh_2Drectangle(lx, ly, nelx, nely, 'QUAD4');
 myMesh = Mesh(nodes);
 myMesh.create_elements_table(elements, myElementConstructor);
 
 % Boundary conditions
-nodesTemp = 1:myMesh.nNodes;
-boundaryNodes = nodesTemp(all(abs(myMesh.nodes - [0.5 * lx, 0]) < [0.1 * lx, 1e-10], 2));
-boundaryDofs = get_index(boundaryNodes, myMesh.nDOFPerNode);
-myMesh.set_essential_boundary_condition(boundaryDofs, 1, 0);
+myMesh.set_essential_boundary_condition(nset{4}, 2, 0); % top rollers
+boundaryNodes = find(all(abs(myMesh.nodes - [0, 0]) < 0.1 * [lx, lx], 2)); % left-bottom pin
+myMesh.set_essential_boundary_condition(boundaryNodes, 1:2, 0);
 
 % Assembly
 myAssembly = Assembly(myMesh);
 
-% Load
-F = 1e-6 * ones(myMesh.nDOFs, 1);
-Fc = myAssembly.constrain_vector(F);
+% Input force
+fIn = zeros(myMesh.nDOFs, 1);
+dofIn = myMesh.get_DOF_from_location([0, ly]);
+fIn(dofIn(1)) = 1e3;
+fInC = myAssembly.constrain_vector(fIn);
+
+% Output force
+fOut = zeros(myMesh.nDOFs, 1);
+dofOut = myMesh.get_DOF_from_location([0.9 * lx, 0.7 * ly]);
+fOut(dofOut(2)) = 1e3;
+fOutC = myAssembly.constrain_vector(fOut);
 
 % Elements centroid
 coord = zeros(myMesh.nElements, 2);
@@ -34,23 +45,31 @@ for ii = 1:myMesh.nElements
 end
 
 % Element stiffness matrix
-Ke = myMesh.Elements(1).Object.electrostatic_stiffness_matrix();
+Ke = myMesh.Elements(1).Object.tangent_stiffness_and_force(zeros(8,1));
 
 % Area
 Ae = myMesh.Elements(1).Object.area;
-% Ae = (lx * ly) / (nelx * nely);
 Atot = Ae * myMesh.nElements;
 
+% Null displacement vector
+u0 = zeros(myMesh.nDOFs, 1);
+
 %% Initialize topology optimization
-radius = 2;
+radius = 4;
 beta = 10; eta = 0.5;
-dMinSimp = 1e-7; p = 3;
+dMinSimp = 1e-6; p = 3;
 
 % Initialize object
 to = TopologyOptimization([nelx, nely], coord, radius, beta, eta, dMinSimp, p);
 
 % Initial layout
 to.initialize_density(0.5);
+
+% Fix domain
+to.set_density_box([0,  0], 0.1 * [lx, lx], 1);
+to.set_density_box([0, ly], 0.1 * [lx, lx], 1);
+to.set_density_box([0.9 * lx, 0.7 * ly], [0.1 * lx, 0.1 * ly], 1);
+to.set_density_box([0.9 * lx, 0.9 * ly], [0.1 * lx, 0.1 * ly], 0);
 
 % Initial layout
 figure();
@@ -60,7 +79,7 @@ drawnow;
 
 %% Initialize optimizer
 m = 1;
-move = 0.01;
+move = 0.1;
 mma = MMA(m, move, to);
 
 % Iterations
@@ -93,32 +112,37 @@ while (iter < maxIter)
     A = Ae * sum(to.d_proj);
 
     % Assemble matrix
-    K = myAssembly.matrix_uniform('electrostatic_stiffness_matrix', 'weights', to.d_simp);
+    [K, ~] = myAssembly.tangent_stiffness_and_force_uniform(u0, 'weights', to.d_simp);
+    if iter == 1
+        kLumped = K(dofOut(2), dofOut(2)) * 0.1;
+    end
+    K(dofOut(2), dofOut(2)) = K(dofOut(2), dofOut(2)) + kLumped;
     Kc = myAssembly.constrain_matrix(K);
 
     % Solve stationary problem
-    uc = Kc \ Fc;
+    uc = Kc \ fInC;
     u = myAssembly.unconstrain_vector(uc);
-    C = dot(Fc, uc);
 
-    % Store initial value
-    if iter == 1
-        C0 = C;
-    end
+    % Compliance
+    Cin = dot(fInC, uc);
+    Cout = dot(fOutC, uc);
+    ME = Cout / Cin;
 
     % Physical density sensitivity
     sensPh = to.simp_sensitivity();
 
     % Compute physical sensitivity
-    dCdd = SensitivityLibrary.compliance(myMesh, u, Ke, sensPh);
+    dCindd = SensitivityLibrary.compliance(myMesh, u, Ke, sensPh);
+    dCoutdd = SensitivityLibrary.compliance_out(myAssembly, Kc, fOutC, u, Ke, sensPh);
+    dMEdd = 1 / (Cin^2) * (dCoutdd * Cin - Cout * dCindd);
     dAdd = Ae * ones(myMesh.nElements, 1);
 
     % Compute filter sensitivity
-    dC = to.filter_sensitivity(dCdd);
+    dME = to.filter_sensitivity(dMEdd);
     dA = to.filter_sensitivity(dAdd);
     
     % Print current iteration
-    fprintf("\n%4d %16.4e %16.4e", iter, C, A / Atot);
+    fprintf("\n%4d %16.4e %16.4e", iter, ME, A / Atot);
 
     % Plot current layout
     plot_layout(to.nel, to.d_proj, to.mapFea2To); drawnow;
@@ -127,12 +151,12 @@ while (iter < maxIter)
     xval  = to.d;
 
     % Objective function and sensitivity (n x 1)
-    f0val = C / C0;
-    df0dx = dC(:) / C0;
+    f0val = -ME;
+    df0dx = -dME(:);
 
     % Constraints (m x 1) and sensitivity (m x n)
-    fval  = [A / Atot - 0.5];
-    dfdx  = [dA(:).' / Atot];
+    fval  = [A - 0.4 * Atot];
+    dfdx  = [dA(:).'];
 
     % Save current iteration
     history(:, iter) = [f0val; fval];
@@ -174,4 +198,4 @@ plot_layout(to.nel, to.d_proj, to.mapFea2To);
 title('Optimal Layout', 'Interpreter', 'latex');
 
 % Create gif of the density evolution
-create_gif(to.nel, densHistory, 'mapFea2To', to.mapFea2To, 'fileName', 'ElectrostaticOptimization');
+create_gif(to.nel, densHistory, 'mapFea2To', to.mapFea2To, 'fileName', 'CompliantMechanism');

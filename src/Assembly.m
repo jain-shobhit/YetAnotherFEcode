@@ -382,14 +382,14 @@ classdef Assembly < handle
         end
 
         function [T] = tensor_uniform(self, elementMethodName, SIZE, sumDIMS, varargin)
-            % This function assembles a generic finite element vector from
-            % its element level counterpart.
-            % All elements are assumed to be the same.
-            % elementMethodName is a string input containing the name of
-            % the method that returns the element level vector Fe.
-            % For this to work, a method named elementMethodName which
-            % returns the appropriate vector must be defined for all
-            % element types in the FE Mesh.
+            % This function works as the "tensor" method, but here 
+            % ALL ELEMENTS ARE ASSUMED TO BE IDENTICAL. This is useful in
+            % Topology Optimization (TO), where a uniform grid is used.
+            % Notes for TO:
+            % - the "weights" argument can be specified to scale the 
+            %   element tensors (as in density methods)
+            % Example:
+            %   T = Assembly.tensor_uniform('T2',SIZE,sumDIMS,'weights',W);
 
             n_e = self.Mesh.nElements;
 
@@ -406,26 +406,21 @@ classdef Assembly < handle
 
             % compute the tensor of the first element
             [Te, ~] = Elements(1).Object.(elementMethodName)(inputs{:});
+            Te = sptensor(Te);
             
             % Computing element level contributions
             parfor j = elementSet
-                thisElement = Elements(j).Object;
-                
-                % [Te, globalSUBS] = thisElement.(elementMethodName)(inputs{:});
                 % global DOFs associated to the element nodes
-                index = get_index(thisElement.nodeIDs, thisElement.nDOFPerNode);
-                
-                % location of each dimension of tensor in global DOFs
-                globalSubs = cell(length(SIZE), 1);
-                globalSubs(:) = {index};
+                iDOFs_global = Elements(j).Object.iDOFs;
 
-                [subs{j}, T{j}] = sparsify(elementWeights(j) * Te, globalSubs, sumDIMS);
+                % get local subs and map them to global subs
+                subs{j} = iDOFs_global(Te.subs); 
+
+                % save values
+                T{j} = elementWeights(j) * Te.vals;
             end
 
             subs = vertcat(subs{:});
-            if ~isempty(sumDIMS)
-                subs(:,sumDIMS) = sort(subs(:,sumDIMS),2);
-            end
             T = vertcat(T{:});
             T = sptensor(subs, T, SIZE);
         end

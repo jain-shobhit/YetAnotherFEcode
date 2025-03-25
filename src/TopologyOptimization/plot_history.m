@@ -2,9 +2,8 @@ function plot_history(history, legend_str)
 % Plots the history of the optimization algorithm.
 % Inputs:
 %   history: matrix of size (n+1) x m, where n is the number of iterations
-%            and m is the number of objectives + constraints.
-%            The first column is the objective function and the rest are the
-%            constraints.
+%       and m is the number of objectives + constraints. The first column
+%       is the objective function and the rest are the constraints.
 %   legend_str: cell array of strings with the names of the objectives and
 %               constraints (optional).
 

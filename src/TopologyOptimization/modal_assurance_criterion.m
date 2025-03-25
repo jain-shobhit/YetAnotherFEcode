@@ -1,18 +1,21 @@
-function [macIndex, macValue] = modal_assurance_criterion(phi, phiRef, doPrint)
-% Calculate the Modal Assurance Criterion (MAC) between a set of modes and a reference mode.
+function [macIndex, macValue] = modal_assurance_criterion(phi, phiRef, varargin)
+% Calculate the Modal Assurance Criterion (MAC) between a set of modes and
+% a reference mode.
 % Inputs:
-%   phi: matrix of size n x m, where n is the number of DOFs and m is the number of modes.
-%        The columns are the modes.
+%   phi: matrix of size n x m, where n is the number of DOFs and m is the
+%       number of modes. The columns are the modes.
 %   phiRef: vector of size n x 1, the reference mode.
-%   doPrint: boolean, print the MAC value and index. Default is false.
+%   doPrint: boolean, print the MAC value and index (optional, default is
+%       false).
 % Outputs:
 %   macIndex: scalar, the index of the mode with the maximum MAC value.
 %   macValue: scalar, the MAC value.
 
-% Check inputs
-if nargin == 2
-    doPrint = false;
-end
+% Parse inputs
+p = inputParser;
+addOptional(p, 'doPrint', false);
+parse(p, varargin{:});
+doPrint = p.Results.doPrint;
 
 % Initialize variables
 phiDot = dot(phiRef, phiRef);
