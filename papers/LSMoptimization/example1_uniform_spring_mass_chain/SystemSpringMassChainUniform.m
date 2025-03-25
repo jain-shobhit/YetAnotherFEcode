@@ -145,14 +145,14 @@ classdef SystemSpringMassChainUniform < SystemBase
                         if obj.dofs_to_dofs_reduced(dof) > -1
                             rows = [rows; obj.dofs_to_dofs_reduced(dof)];
                             cols = [cols; col];
-                            vals = [vals; (-1)^sum(idx_loc)]; % this is the value of the nonlinear force
+                            vals = [vals; (-1)^(sum(idx_loc) + order - 1)]; % this is the value of the nonlinear force
                         end
             
                         % Add to the triplet at the row of the right dof
                         if obj.dofs_to_dofs_reduced(dof + 1) > -1
                             rows = [rows; obj.dofs_to_dofs_reduced(dof + 1)];
                             cols = [cols; col];
-                            vals = [vals; -(-1).^sum(idx_loc)]; % this is the value of the nonlinear force
+                            vals = [vals; (-1)^(sum(idx_loc) + order)]; % this is the value of the nonlinear force
                         end
                     end
                 end
