@@ -132,14 +132,14 @@ classdef SystemSpringMassChain < SystemBase
                     if obj.dofs_to_dofs_reduced(idxK) > -1
                         rows = [rows; obj.dofs_to_dofs_reduced(idxK)];
                         cols = [cols; col];
-                        vals = [vals; (-1)^sum(idxLocal) * valK]; % this is the value of the nonlinear force
+                        vals = [vals; (-1)^(sum(idxLocal) + order - 1) * valK]; % this is the value of the nonlinear force
                     end
         
                     % Add to the triplet at the row of the right mass
                     if obj.dofs_to_dofs_reduced(idxK + 1) > -1
                         rows = [rows; obj.dofs_to_dofs_reduced(idxK + 1)];
                         cols = [cols; col];
-                        vals = [vals; -(-1).^sum(idxLocal) * valK]; % this is the value of the nonlinear force
+                        vals = [vals; (-1)^(sum(idxLocal) + order) * valK]; % this is the value of the nonlinear force
                     end
                 end
             end
