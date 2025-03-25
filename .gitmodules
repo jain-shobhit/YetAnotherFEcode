@@ -1,3 +1,5 @@
-[submodule "external/tensor_toolbox"]
-	path = external/tensor_toolbox
-	url = https://gitlab.com/tensors/tensor_toolbox.git
+# We commented out this module because we needed to modify the "..\yafec\external\tensor_toolbox\@tensor\ttv.m"
+# See issue: https://gitlab.com/tensors/tensor_toolbox/-/issues/81
+# [submodule "external/tensor_toolbox"]
+# 	path = external/tensor_toolbox
+# 	url = https://gitlab.com/tensors/tensor_toolbox.git
