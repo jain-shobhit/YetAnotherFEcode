@@ -1,22 +1,26 @@
-classdef MMA
+classdef MMA < handle
     % A class to handle the Method of Moving Asymptotes (MMA).
     % The original code is available under the
     % GNU General Public License (GPLv3) at: https://www.smoptit.se/
-    % The source files are includesd in the folder "external/GCMMA-MMA-code-1.5".
+    % The source files are includesd in "external/GCMMA-MMA-code-1.5".
     % Properties:
-    %   - m, n: the number of constraints and design variables.
-    %   - xmin, xmax: the lower and upper bounds for the variables x_j.
-    %   - xold1, xold2: xval, one and two iterations ago.
-    %   - low, upp: the lower and upper asymptotes from the previous iteration.
-    %   - a0, a, c, d: the constants in the terms a_0*z, a_i*z, c_i*y_i, 0.5*d_i*(y_i)^2.
-    %   - move: maximum change in the design variables.
-    %   - freeElements: free elements indicator: 1 free, 0 fixed. Default is [].
-    %   - freeElementsFlag: flag for fixed elements. Default is false.
-    %   - mapSymmetry: the SymmetryMap object. Default is [].
-    %   - mapSymmetryFlag: flag for symmetry map. Default is false.
+    %   m, n: the number of constraints and design variables.
+    %   xmin, xmax: the lower and upper bounds for the variables x_j.
+    %   xold1, xold2: xval, one and two iterations ago.
+    %   low, upp: the lower and upper asymptotes from the previous
+    %       iteration.
+    %   a0, a, c, d: the constants in the terms a_0*z, a_i*z, c_i*y_i,
+    %       0.5*d_i*(y_i)^2.
+    %   move: maximum change in the design variables.
+    %   freeElements: free elements indicator: 1 free, 0 fixed (optional,
+    %       default is []).
+    %   freeElementsFlag: flag for the free elements indicator (optional,
+    %       default is []).
+    %   mapSymmetry: the SymmetryMap object (optional, default is []).
+    %   mapSymmetryFlag: flag for symmetry map (optional, default is []).
     % Methods:
-    %   - MMA: constructor.
-    %   - optimize: perform the MMA optimization.
+    %   MMA: constructor.
+    %   optimize: perform the MMA optimization.
     
     properties
         m, n
@@ -32,20 +36,23 @@ classdef MMA
     end
     
     methods
-        function obj = MMA(m, move, to, mapSymmetry)
+        function obj = MMA(m, move, to, varargin)
             % MMA: constructor.
             % Inputs:
-            %   - m: the number of general constraints.
-            %   - move: maximum change in the design variables.
-            %   - to: the TopologyOptimization object.
-            %   - mapSymmetry: the SymmetryMap object. Default is [].
+            %   m: the number of general constraints.
+            %   move: maximum change in the design variables.
+            %   to: the TopologyOptimization object.
+            %   mapSymmetry: SymmetryMap object (optional, default is []).
+            % Outputs:
+            %   obj: the MMA object.
 
-            % Check inputs
-            if nargin == 3
-                obj.mapSymmetry = [];
-            else
-                obj.mapSymmetry = mapSymmetry;
-            end
+            % Parse inputs
+            p = inputParser;
+            addOptional(p, 'mapSymmetry', []);
+            parse(p, varargin{:});
+            obj.mapSymmetry = p.Results.mapSymmetry;
+
+            % Store inputs
             obj.freeElements = to.freeElements;
             x = to.d;
 
@@ -83,18 +90,17 @@ classdef MMA
             obj.move = move;                % Maximum change in the design variables.
         end
 
-        function [x, obj] = optimize(obj, iter, xval, f0val, df0dx, fval, dfdx)
+        function x = optimize(obj, iter, xval, f0val, df0dx, fval, dfdx)
             % Perform the MMA optimization.
             % Inputs:
-            %   - iter: the number of iterations.
-            %   - xval: the design variables.
-            %   - f0val: the objective function value.
-            %   - df0dx: the gradient of the objective function.
-            %   - fval: the constraint function values.
-            %   - dfdx: the gradients of the constraint functions.
+            %   iter: the number of iterations.
+            %   xval: the design variables.
+            %   f0val: the objective function value.
+            %   df0dx: the gradient of the objective function.
+            %   fval: the constraint function values.
+            %   dfdx: the gradients of the constraint functions.
             % Outputs:
-            %   - x: the optimized design variables.
-            %   - obj: the updated MMA object.
+            %   x: the optimized design variables.
 
             % Apply symmetry reduction
             if obj.mapSymmetryFlag

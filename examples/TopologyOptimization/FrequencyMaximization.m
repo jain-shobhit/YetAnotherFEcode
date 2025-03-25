@@ -25,13 +25,6 @@ myMesh.set_essential_boundary_condition(nset{3}, 1:2, 0);
 % Assembly
 myAssembly = Assembly(myMesh);
 
-% Nodal force
-F = zeros(myMesh.nDOFs,1);
-nf = find_node(lx/2, ly/2, [], nodes); % node where to put the force
-node_force_dofs = get_index(nf, myMesh.nDOFPerNode);
-F(node_force_dofs(2)) = -1e3;
-Fc = myAssembly.constrain_vector(F);
-
 % Elements centroid
 coord = zeros(myMesh.nElements, 2);
 for ii = 1:myMesh.nElements
@@ -51,7 +44,7 @@ u0 = zeros(myMesh.nDOFs, 1);
 
 %% Initialize topology optimization
 radius = 2;
-beta = 1; eta = 0.5;
+beta = 10; eta = 0.5;
 dMinSimp = 1e-7; p = 1;
 dMinRamp = 1e-8; q = 4;
 
@@ -59,18 +52,18 @@ dMinRamp = 1e-8; q = 4;
 to = TopologyOptimization([nelx, nely], coord, radius, beta, eta, dMinSimp, p, dMinRamp, q);
 
 % Initial layout
-to = to.initialize_density(0.5);
+to.initialize_density(0.5);
 
 % Modify regions of the domain
-to = to.set_density_box([lx/2, ly/2], [0.2 * lx, 1e10], 1);
+to.set_density_box([lx/2, ly/2], [0.2 * lx, 1e10], 1);
 
 % Initialize symmetry object
-symmetry_map = SymmetryMap().symmetry_orthogonal(to.coord, to.nel);
+symmetry_map = SymmetryMap(to.coord, to.nel);
 
 % Initial layout
 figure();
 plot_layout(to.nel, to.d, to.mapFea2To);
-title('Initial Layout');
+title('Initial Layout', 'Interpreter', 'latex');
 drawnow
 
 %% Initialize optimizer
@@ -94,22 +87,16 @@ figure(); drawnow;
 fprintf("\nIteration - Objective - Constraints\n");
 
 % Start timer
-tic;
+tStart = tic;
 
 % Loop
 iter = 1;
 while (iter < maxIter)
-    % Update beta
-    if mod(iter, 50) == 0
-        to.beta = to.beta * 1.5;
-        fprintf("\nUpdate beta: %.4e", to.beta);
-    end
-
     % Apply filtering and projection stages
-    to = to.filter();
-    to = to.projection();
-    to = to.simp();
-    to = to.ramp();
+    to.filter();
+    to.projection();
+    to.simp();
+    to.ramp();
 
     % Current area
     A = Ae * sum(to.d_proj);
@@ -121,15 +108,15 @@ while (iter < maxIter)
     Kc = myAssembly.constrain_matrix(K);
     Mc = myAssembly.constrain_matrix(M);
 
-    % Solve reference problem
-    if iter == 1
-        vc = Kc \ Fc;
-    end
-
     % Solve eigenvalue problem
-    nev = 10;
+    nev = 20;
     [V, D] = eigs(Mc, Kc, nev, 'LM');
     omegas = sqrt(1 ./ diag(D));
+
+    % Store reference mode shape
+    if iter == 1
+        vc = V(:, 1);
+    end
     
     % Apply MAC
     [idx, mac] = modal_assurance_criterion(V, vc);
@@ -157,16 +144,20 @@ while (iter < maxIter)
     % Plot current layout
     plot_layout(to.nel, to.d_proj, to.mapFea2To); drawnow;
 
-    % Save current iteration
-    history(:, iter) = [f, A / Atot];
-    densHistory(:, iter) = to.d_proj;
+    % Design variables (n x 1)
+    xval  = to.d;
 
-    % MMA setup
-    xval  = to.d;           % design variables (n x 1)
-    f0val = -f;             % objective function
-    df0dx = -df(:);         % objective function sensitivity (n x 1)
-    fval  = A - 0.7 * Atot; % constraints (m x 1)
-    dfdx  = dA(:).';        % constraints sensitivity (m x n)
+    % Objective function and sensitivity (n x 1)
+    f0val = -f;
+    df0dx = -df(:);
+
+    % Constraints (m x 1) and sensitivity (m x n)
+    fval  = [A - 0.7 * Atot];
+    dfdx  = [dA(:).'];
+
+    % Save current iteration
+    history(:, iter) = [f0val; fval];
+    densHistory(:, iter) = to.d_proj;
    
     % Convergence criterion
     if iter > 5 % check convergence after 5 iterations
@@ -181,16 +172,16 @@ while (iter < maxIter)
     end
 
     % MMA step
-    [xmma, mma] = mma.optimize(iter, xval, f0val, df0dx, fval, dfdx);
-    to.d = xmma;
+    to.d = mma.optimize(iter, xval, f0val, df0dx, fval, dfdx);
 
     % Update counter
     iter = iter + 1;
 end
 
 % Stop timer and display elapsed time
+tElapsed = toc(tStart);
 fprintf('\n\nEnd of the optimization.\n');
-toc;
+fprintf('Elapsed time is %f seconds.\n', tElapsed)
 
 %% Optimal results
 
@@ -201,4 +192,7 @@ plot_history(history);
 % Optimal layout
 figure();
 plot_layout(to.nel, to.d_proj, to.mapFea2To);
-title('Optimal Layout');
+title('Optimal Layout', 'Interpreter', 'latex');
+
+% Create gif of the density evolution
+create_gif(to.nel, densHistory, 'mapFea2To', to.mapFea2To, 'fileName', 'FrequencyMaximization');

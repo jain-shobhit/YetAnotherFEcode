@@ -1,14 +1,17 @@
-function plot_layout(nel, v, mapFea2To)
+function plot_layout(nel, v, varargin)
 % Plots the layout of the topology optimization problem.
 % Inputs:
 %   nel: vector of size 2 x 1, the number of elements in each direction.
-%   v: vector of size n x 1, the element densities or the signed distance values of the level-set function.
-%   mapFea2To: vector of size n x 1, the mapping from the FEA domain to the TO domain (optional).
+%   v: vector of size n x 1, the element densities or the signed distance
+%       values of the level-set function.
+%   mapFea2To: vector of size n x 1, the mapping from the FEA domain to the
+%       TO domain (optional, default is []).
 
-% Check inputs
-if nargin < 3
-    mapFea2To = [];
-end
+% Parse inputs
+p = inputParser;
+addOptional(p, 'mapFea2To', []);
+parse(p, varargin{:});
+mapFea2To = p.Results.mapFea2To;
 
 % Pass from the FEA domain to the TO domain
 if ~isempty(mapFea2To)

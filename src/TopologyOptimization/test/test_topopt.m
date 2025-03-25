@@ -2,29 +2,34 @@ clear; clc; close all;
 
 %% Problem settings
 % Material
-thickness = 1;
-DielMat = DielectricMaterial();
-DielMat.set('RELATIVE_PERMITTIVITY', 1);
-myElementConstructor = @() Quad4Element_EM(thickness, DielMat);
+E       = 70e9;     % Young's modulus [Pa]
+rho     = 2700;     % density [kg/m^3]
+nu      = 0.33;     % Poisson's ratio 
+thickness = 0.1;    % [m] beam's out-of-plane thickness
+myMaterial = KirchoffMaterial();
+set(myMaterial,'YOUNGS_MODULUS',E,'DENSITY',rho,'POISSONS_RATIO',nu);
+myMaterial.PLANE_STRESS = true;	% set "false" for plane_strain
+myElementConstructor = @()Quad4Element(thickness, myMaterial);
 
 % Mesh
-lx = 1; ly = 1;
-nelx = 100; nely = 100;
+lx = 1; ly = 0.5;
+nelx = 100; nely = 50;
 [nodes, elements, nset] = mesh_2Drectangle(lx, ly, nelx, nely, 'QUAD4');
 myMesh = Mesh(nodes);
 myMesh.create_elements_table(elements, myElementConstructor);
 
 % Boundary conditions
-nodesTemp = 1:myMesh.nNodes;
-boundaryNodes = nodesTemp(all(abs(myMesh.nodes - [0.5 * lx, 0]) < [0.1 * lx, 1e-10], 2));
-boundaryDofs = get_index(boundaryNodes, myMesh.nDOFPerNode);
-myMesh.set_essential_boundary_condition(boundaryDofs, 1, 0);
+myMesh.set_essential_boundary_condition(nset{1}, 1:2, 0);
+myMesh.set_essential_boundary_condition(nset{3}, 1, 0);
 
 % Assembly
 myAssembly = Assembly(myMesh);
 
-% Load
-F = 1e-6 * ones(myMesh.nDOFs, 1);
+% Nodal force
+F = zeros(myMesh.nDOFs,1);
+nf = find_node(lx, ly, [], nodes); % node where to put the force
+node_force_dofs = get_index(nf, myMesh.nDOFPerNode);
+F(node_force_dofs(2)) = -1e3;
 Fc = myAssembly.constrain_vector(F);
 
 % Elements centroid
@@ -34,12 +39,14 @@ for ii = 1:myMesh.nElements
 end
 
 % Element stiffness matrix
-Ke = myMesh.Elements(1).Object.electrostatic_stiffness_matrix();
+Ke = myMesh.Elements(1).Object.tangent_stiffness_and_force(zeros(8,1));
 
 % Area
 Ae = myMesh.Elements(1).Object.area;
-% Ae = (lx * ly) / (nelx * nely);
 Atot = Ae * myMesh.nElements;
+
+% Null displacement vector
+u0 = zeros(myMesh.nDOFs, 1);
 
 %% Initialize topology optimization
 radius = 2;
@@ -52,6 +59,14 @@ to = TopologyOptimization([nelx, nely], coord, radius, beta, eta, dMinSimp, p);
 % Initial layout
 to.initialize_density(0.5);
 
+% Fix domain
+to.set_density_box([lx, ly], 0.1 * [lx, ly], 1);
+to.set_density_box([lx,  0], 0.1 * [lx, ly], 1);
+to.set_density_sphere(0.5 * [lx, ly], 0.1 * lx, 0);
+
+% Create symmetry map
+symmetry_map = SymmetryMap(to.coord, to.nel, 'x');
+
 % Initial layout
 figure();
 plot_layout(to.nel, to.d, to.mapFea2To);
@@ -60,11 +75,11 @@ drawnow;
 
 %% Initialize optimizer
 m = 1;
-move = 0.01;
-mma = MMA(m, move, to);
+move = 0.2;
+mma = MMA(m, move, to, symmetry_map);
 
 % Iterations
-maxIter = 200;
+maxIter = 100;
 
 % History file
 history = NaN(m + 1, maxIter);
@@ -74,6 +89,9 @@ densHistory = NaN(to.nElements, maxIter);
 figure(); drawnow;
 
 %% Main loop
+
+% Load history
+testHistory = readmatrix('test_topopt_history.csv');
 
 % Header
 fprintf("\nIteration - Objective - Constraints\n");
@@ -93,15 +111,15 @@ while (iter < maxIter)
     A = Ae * sum(to.d_proj);
 
     % Assemble matrix
-    K = myAssembly.matrix_uniform('electrostatic_stiffness_matrix', 'weights', to.d_simp);
+    [K, ~] = myAssembly.tangent_stiffness_and_force_uniform(u0, 'weights', to.d_simp);
     Kc = myAssembly.constrain_matrix(K);
 
     % Solve stationary problem
     uc = Kc \ Fc;
     u = myAssembly.unconstrain_vector(uc);
-    C = dot(Fc, uc);
 
-    % Store initial value
+    % Compliance
+    C = dot(Fc, uc);
     if iter == 1
         C0 = C;
     end
@@ -116,9 +134,6 @@ while (iter < maxIter)
     % Compute filter sensitivity
     dC = to.filter_sensitivity(dCdd);
     dA = to.filter_sensitivity(dAdd);
-    
-    % Print current iteration
-    fprintf("\n%4d %16.4e %16.4e", iter, C, A / Atot);
 
     % Plot current layout
     plot_layout(to.nel, to.d_proj, to.mapFea2To); drawnow;
@@ -131,13 +146,30 @@ while (iter < maxIter)
     df0dx = dC(:) / C0;
 
     % Constraints (m x 1) and sensitivity (m x n)
-    fval  = [A / Atot - 0.5];
-    dfdx  = [dA(:).' / Atot];
+    fval  = A / Atot - 0.5;
+    dfdx  = dA(:).' / Atot;
+    
+    % Print current iteration
+    fprintf("\n%4d %16.4e %16.4e", iter, f0val, fval);
+
+    % Write to a file ( only use this to create the history file)
+    % if iter == 1
+    %     fileID = fopen('test_topopt_history.csv', 'w');
+    % else
+    %     fileID = fopen('test_topopt_history.csv', 'a');
+    % end
+    % fprintf(fileID, "%.10e,%.10e\n", f0val, fval);
+    % fclose(fileID);
 
     % Save current iteration
     history(:, iter) = [f0val; fval];
     densHistory(:, iter) = to.d_proj;
-   
+
+    % Check history
+    if any(abs(1 - history(:, iter) ./ testHistory(iter, :).') > 1e-6)
+        error('History does not match.');
+    end
+    
     % Convergence criterion
     if iter > 5 % check convergence after 5 iterations
         fval_tol = 1e-3;
@@ -172,6 +204,3 @@ plot_history(history);
 figure();
 plot_layout(to.nel, to.d_proj, to.mapFea2To);
 title('Optimal Layout', 'Interpreter', 'latex');
-
-% Create gif of the density evolution
-create_gif(to.nel, densHistory, 'mapFea2To', to.mapFea2To, 'fileName', 'ElectrostaticOptimization');

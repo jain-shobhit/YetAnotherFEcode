@@ -50,19 +50,19 @@ u0 = zeros(myMesh.nDOFs, 1);
 
 %% Initialize topology optimization
 radius = 2;
-beta = 1; eta = 0.5;
+beta = 10; eta = 0.5;
 dMinSimp = 1e-7; p = 3;
 
 % Initialize object
 to = TopologyOptimization([nelx, nely], coord, radius, beta, eta, dMinSimp, p);
 
 % Initial layout
-to = to.initialize_density(0.5);
+to.initialize_density(0.5);
 
 % Initial layout
 figure();
 plot_layout(to.nel, to.d, to.mapFea2To);
-title('Initial Layout');
+title('Initial Layout', 'Interpreter', 'latex');
 drawnow;
 
 %% Initialize optimizer
@@ -86,21 +86,15 @@ figure(); drawnow;
 fprintf("\nIteration - Objective - Constraints\n");
 
 % Start timer
-tic;
+tStart = tic;
 
 % Loop
 iter = 1;
 while (iter < maxIter)
-    % Update beta
-    if mod(iter, 50) == 0
-        to.beta = to.beta * 1.5;
-        fprintf("\nUpdate beta: %.4e", to.beta);
-    end
-
     % Apply filtering and projection stages
-    to = to.filter();
-    to = to.projection();
-    to = to.simp();
+    to.filter();
+    to.projection();
+    to.simp();
 
     % Current area
     A = Ae * sum(to.d_proj);
@@ -133,17 +127,21 @@ while (iter < maxIter)
     % Plot current layout
     plot_layout(to.nel, to.d_proj, to.mapFea2To); drawnow;
 
-    % Save current iteration
-    history(:, iter) = [C, A / Atot];
-    densHistory(:, iter) = to.d_proj;
+    % Design variables (n x 1)
+    xval  = to.d;
 
-    % MMA setup
-    xval  = to.d(:);        % design variables (n x 1)
-    f0val = C;              % objective function
-    df0dx = dC(:);          % objective function sensitivity (n x 1)
-    fval  = A - 0.5 * Atot; % constraints (m x 1)
-    dfdx  = dA(:)';         % constraints sensitivity (m x n)
-   
+    % Objective function and sensitivity (n x 1)
+    f0val = C;
+    df0dx = dC(:);
+
+    % Constraints (m x 1) and sensitivity (m x n)
+    fval  = [A - 0.5 * Atot];
+    dfdx  = [dA(:).'];
+
+    % Save current iteration
+    history(:, iter) = [f0val; fval];
+    densHistory(:, iter) = to.d_proj;
+    
     % Convergence criterion
     if iter > 5 % check convergence after 5 iterations
         fval_tol = 1e-3;
@@ -157,16 +155,16 @@ while (iter < maxIter)
     end
 
     % MMA step
-    [xmma, mma] = mma.optimize(iter, xval, f0val, df0dx, fval, dfdx);
-    to.d = xmma;
+    to.d = mma.optimize(iter, xval, f0val, df0dx, fval, dfdx);
 
     % Update counter
     iter = iter + 1;
 end
 
 % Stop timer and display elapsed time
+tElapsed = toc(tStart);
 fprintf('\n\nEnd of the optimization.\n');
-toc;
+fprintf('Elapsed time is %f seconds.\n', tElapsed)
 
 %% Optimal results
 
@@ -177,4 +175,7 @@ plot_history(history);
 % Optimal layout
 figure();
 plot_layout(to.nel, to.d_proj, to.mapFea2To);
-title('Optimal Layout');
+title('Optimal Layout', 'Interpreter', 'latex');
+
+% Create gif of the density evolution
+create_gif(to.nel, densHistory, 'mapFea2To', to.mapFea2To, 'fileName', 'ComplianceMaximization');
