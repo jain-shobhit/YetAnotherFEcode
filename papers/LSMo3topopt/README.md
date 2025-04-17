@@ -25,7 +25,7 @@ The folder `ssmtool_validation` contains the code used to validate the results o
 ## Citation
 To cite this package, please cite the following:
 
-M. Pozzi, J. Marconi, S. Jain, M. Li, and F. Braghin. "Topology optimization of nonlinear structural dynamics with invariant manifold-based reduced order models". *Structural and Multidisciplinary Optimization* (2025), DOI: ???.
+M. Pozzi, J. Marconi, S. Jain, M. Li, and F. Braghin. "Topology optimization of nonlinear structural dynamics with invariant manifold-based reduced order models". *Structural and Multidisciplinary Optimization* (2025), <https://doi.org/10.1007/s00158-025-04010-1>.
 
 ## Contact
 If you have any questions, create an issue or email <jacopo.marconi@polimi.it> or <matteo1.pozzi@polimi.it>.
